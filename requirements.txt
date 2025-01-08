@@ -1,0 +1,12 @@
+flask==2.0.3
+flask-cors
+sqlalchemy==2.0.36
+psycopg2-binary  # Instale diretamente com pip se ocorrer erro no requirements.txt
+werkzeug==2.0.3
+pytest
+pytest-mock
+dataclasses-json
+python-dotenv
+flask-restx
+pika
+pymongo

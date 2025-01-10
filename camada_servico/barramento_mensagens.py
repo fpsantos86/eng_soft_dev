@@ -6,35 +6,44 @@ class BarramentoMensagens:
     def __init__(self):
         self.connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
         self.channel = self.connection.channel()
+       
+        
 
-    def configurar_exchange(self, exchange_name):
+    def configurar_exchange(self, exchange_name, exchange_type="direct"):
         """
         Configura um exchange no RabbitMQ.
         """
-        self.channel.exchange_declare(exchange=exchange_name, exchange_type="fanout")
-
-    def publicar(self, exchange_name, evento):
+        self.channel.exchange_declare(exchange=exchange_name, exchange_type=exchange_type, durable=True)
+    
+    def configurar_fila(self, exchange_name, fila, routing_key):
         """
-        Publica um evento no RabbitMQ.
+        Configura uma fila vinculada a um exchange no RabbitMQ.
         """
-        #evento = {"id_produto": "12345", "nome": "Produto Teste", "descricao": "Teste de Publicação"}
-        event =  evento.__dict__
+        self.channel.queue_declare(queue=fila, durable=True)
+        self.channel.queue_bind(exchange=exchange_name, queue=fila, routing_key=routing_key)
+    
+    def publicar_produto(self, exchange_name, routing_key, evento):
+        """
+        Publica um evento no RabbitMQ em uma exchange com a routing_key.
+        """
+        event = evento if isinstance(evento, dict) else evento.__dict__
         self.channel.basic_publish(
             exchange=exchange_name,
-            routing_key=exchange_name,
+            routing_key=routing_key,
             body=json.dumps(event),
             properties=pika.BasicProperties(content_type="application/json")
         )
 
-    def consumir(self, fila, callback):
+
+    def consumir(self, exchange_name, fila, routing_key, callback):
         """
-        Consome mensagens de uma fila e executa um callback para cada mensagem.
+        Consome mensagens de uma fila vinculada a uma routing_key específica.
         """
-        # Declara uma fila para garantir que ela exista
+        # Declara a fila para garantir que ela exista
         self.channel.queue_declare(queue=fila, durable=True)
 
-        # Vincula a fila ao exchange
-        self.channel.queue_bind(exchange="eventos_pedidos", queue=fila)
+        # Vincula a fila ao exchange com a routing_key
+        self.channel.queue_bind(exchange=exchange_name, queue=fila, routing_key=routing_key)
 
         # Define o consumidor com um callback
         def processar_mensagem(ch, method, properties, body):
@@ -43,6 +52,8 @@ class BarramentoMensagens:
             ch.basic_ack(delivery_tag=method.delivery_tag)
 
         self.channel.basic_consume(queue=fila, on_message_callback=processar_mensagem)
+
+
         
     def iniciar_consumo(self):
         """

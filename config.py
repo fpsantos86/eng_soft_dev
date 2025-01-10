@@ -13,6 +13,11 @@ POSTGRES_DB = os.getenv("POSTGRES_DB")
 
 SQLALCHEMY_DATABASE_URI = f"postgresql://{POSTGRES_USER}:{POSTGRES_PASSWORD}@{POSTGRES_HOST}:{POSTGRES_PORT}/{POSTGRES_DB}"
 
+IS_DOCKER = os.getenv("IS_DOCKER", "false").lower() == "true"
+
+RABBITMQ_HOST = "rabbitmq" if IS_DOCKER else "localhost"
+RABBITMQ_PORT = "5672" if IS_DOCKER else "5673"
+
 # Configuração do MongoDB
 MONGO_HOST = os.getenv("MONGO_HOST", "localhost")
 MONGO_PORT = int(os.getenv("MONGO_PORT", 27017))

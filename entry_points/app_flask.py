@@ -1,5 +1,5 @@
 import threading
-from flask import Flask, json, request, jsonify
+from flask import Flask, json, make_response, request, jsonify
 from flask_cors import CORS
 from flask_restx import Api, Resource, fields
 from adapters import repositorio_mongo
@@ -10,8 +10,9 @@ from camada_servico.manipuladores_consulta import manipular_consultar_detalhes_p
 from domain.consultas import ConsultarDetalhesProduto
 from domain.comandos import AdicionarProdutoComando
 from adapters.repositorio_mongo import RepositorioConsultaMongoDB
-
 from adapters.repositorio import RepositorioProduto
+
+from camada_servico.consumidor_eventos import iniciar_consumidor_produtos
 
 app = Flask(__name__)
 # Adicione a configuração de CORS
@@ -63,7 +64,7 @@ class ProdutoResource(Resource):
         # Inicializando o repositório
         repositorio = RepositorioConsultaMongoDB()
         produto = manipular_consultar_detalhes_produto(consulta, repositorio)
-        return jsonify(produto), 200
+        return make_response(jsonify(produto), 200)
 
 @ns_produtos.route("/")
 class ProdutoListaResource(Resource):
@@ -84,8 +85,15 @@ class ProdutoListaResource(Resource):
         # Inicializando o repositório
         repositorio = RepositorioProduto()
         barramento = BarramentoMensagens()
+        barramento.configurar_exchange("eventos_produtos", "direct")
+        barramento.configurar_fila("eventos_produtos", "eventos_produtos", "produto_key")
         manipular_adicionar_produto(comando, repositorio,barramento)
         return {"message": "Produto adicionado com sucesso"}, 201
 
 if __name__ == "__main__":
+   
+     # Inicia o consumidor em outra thread
+    consumidor_thread = threading.Thread(target=iniciar_consumidor_produtos,daemon=True)
+    consumidor_thread.start()
+    # Inicia o Flask na thread principal
     app.run(debug=True)

@@ -32,7 +32,7 @@ def manipular_adicionar_produto(comando: AdicionarProdutoComando, repositorio: R
 
     
     # Publicar o evento no barramento
-    barramento.publicar("eventos_produtos", evento)
+    barramento.publicar_produto("eventos_produtos", "produto_key",evento)
 
 
 def manipular_atualizar_preco_produto(comando: AtualizarPrecoProdutoComando, servico: ServicoProduto):

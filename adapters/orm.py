@@ -10,6 +10,7 @@ Base = declarative_base()
 
 # Configuração do engine e da sessão
 engine = create_engine(SQLALCHEMY_DATABASE_URI)
+
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 # Modelo ORM para a tabela de produtos

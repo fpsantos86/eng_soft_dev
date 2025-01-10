@@ -1,8 +1,10 @@
+import os
 from pymongo import MongoClient
 
+IS_DOCKER = os.getenv("IS_DOCKER", "false").lower() == "true"
 # Variáveis de conexão (use seu .env ou substitua os valores diretamente)
 MONGO_HOST = "localhost"
-MONGO_PORT = 37017
+MONGO_PORT = int(os.getenv("MONGO_PORT", "37017" if not IS_DOCKER else "27017"))
 MONGO_USER = "admin"  # Altere se necessário
 MONGO_PASSWORD = "admin123"  # Altere se necessário
 MONGO_DB_NAME = "cqrs_db"
@@ -16,7 +18,7 @@ client = MongoClient(uri)
 db = client[MONGO_DB_NAME]
 collection = db[MONGO_COLLECTION_NAME]
 
-# Inserir um documento de exemplo para garantir que tudo está funcionando
+#Inserir um documento de exemplo para garantir que tudo está funcionando
 documento_exemplo = {
     "id_produto": "12345",
     "nome": "Produto Exemplo",
@@ -28,3 +30,6 @@ collection.insert_one(documento_exemplo)
 
 print(f"Banco de dados '{MONGO_DB_NAME}' e coleção '{MONGO_COLLECTION_NAME}' criados com sucesso!")
 print(f"Documento inserido: {documento_exemplo}")
+
+collection.delete_one({'id_produto':"12345"})
+print(f"Documento excluido: {documento_exemplo}")

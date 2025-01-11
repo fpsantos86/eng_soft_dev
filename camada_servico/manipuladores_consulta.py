@@ -41,8 +41,7 @@ def manipular_consultar_detalhes_produto(consulta: ConsultarDetalhesProduto, rep
     if not produto:
         raise ValueError(f"Produto com ID {consulta.id_produto} não encontrado.")
 
-
-    produtoDto =   {
+    produtoDto = {
         "id_produto": produto.get("id_produto"),
         "nome": produto.get("nome"),
         "descricao": produto.get("descricao"),

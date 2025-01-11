@@ -34,6 +34,19 @@ class BarramentoMensagens:
             properties=pika.BasicProperties(content_type="application/json")
         )
 
+    def publicar(self, evento):
+        """
+        Publica um evento no RabbitMQ.
+        """
+        exchange_name = "eventos"
+        routing_key = "evento_key"
+        event = evento if isinstance(evento, dict) else evento.__dict__
+        self.channel.basic_publish(
+            exchange=exchange_name,
+            routing_key=routing_key,
+            body=json.dumps(event),
+            properties=pika.BasicProperties(content_type="application/json")
+        )
 
     def consumir(self, exchange_name, fila, routing_key, callback):
         """

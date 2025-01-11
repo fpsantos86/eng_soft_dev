@@ -1,11 +1,14 @@
 from adapters.repositorio import RepositorioPedido, RepositorioProduto
 from domain.comandos import AdicionarProdutoComando, AtualizarPrecoProdutoComando
-from domain.comandos import CriarPedidoComando, AtualizarStatusPedidoComando
+from domain.comandos import CriarPedidoComando, AtualizarStatusPedidoComando, AtualizarProdutoComando
 from domain.eventos import PedidoCriadoEvento, ProdutoAdicionadoEvento
 from domain.modelo import Produto
 from camada_servico.servicos import ServicoProduto, ServicoPedido
 from camada_servico.barramento_mensagens import BarramentoMensagens
 
+from domain.comandos import AtualizarPrecoProdutoComando
+from domain.eventos import PrecoProdutoAtualizado
+from domain.eventos import PrecoProdutoAtualizadoEvento
 
 
 def manipular_adicionar_produto(comando: AdicionarProdutoComando, repositorio: RepositorioProduto, barramento: BarramentoMensagens):
@@ -37,9 +40,25 @@ def manipular_adicionar_produto(comando: AdicionarProdutoComando, repositorio: R
 
 def manipular_atualizar_preco_produto(comando: AtualizarPrecoProdutoComando, servico: ServicoProduto):
     """
-    Manipula o comando para atualizar o preço de um produto.
+    Manipula o comando de atualização de preço do produto.
     """
-    servico.atualizar_preco(comando.id_produto, comando.novo_preco)
+    # Atualiza o preço do produto no repositório
+    produto = servico.repositorio.obter_produto_por_id(comando.id_produto)
+    if (produto):
+        preco_antigo, preco_atualizado = produto.atualizar_preco(comando.novo_preco)
+        servico.repositorio.salvar_produto(produto)
+        
+        # Cria um evento de preço atualizado
+        evento = PrecoProdutoAtualizadoEvento(
+            id_produto=comando.id_produto,
+            preco_antigo=preco_antigo,
+            preco_novo=preco_atualizado
+        )
+        
+        # Publica o evento no barramento de mensagens
+        servico.barramento_eventos.publicar(evento)
+    else:
+        raise ValueError(f"Produto com ID {comando.id_produto} não encontrado.")
 
 
 def manipular_criar_pedido(
@@ -77,3 +96,24 @@ def manipular_atualizar_status_pedido(
         id_pedido=comando.id_pedido,
         novo_status=comando.novo_status
     )
+
+
+def manipular_atualizar_produto(comando: AtualizarProdutoComando, servico: ServicoProduto):
+    """
+    Manipula o comando de atualização de todos os detalhes do produto.
+    """
+    produto = servico.repositorio.obter_produto_por_id(comando.id_produto)
+    if produto:
+        produto.atualizar_detalhes(
+            nome=comando.nome,
+            descricao=comando.descricao,
+            preco=comando.preco,
+            quantidade_estoque=comando.quantidade_estoque
+        )
+        servico.repositorio.salvar_produto(produto)
+        
+        # Cria um evento de produto atualizado (se necessário)
+        # evento = ProdutoAtualizado(...)
+        # servico.barramento.publicar_evento(evento)
+    else:
+        raise ValueError(f"Produto com ID {comando.id_produto} não encontrado.")

@@ -59,4 +59,4 @@ class ServicoPedido:
             status_anterior=status_anterior,
             status_atual=status_atual
         )
-        self.barramento_eventos.publicar(evento)        
+        self.barramento_eventos.publicar(evento)

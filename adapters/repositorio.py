@@ -32,6 +32,17 @@ class RepositorioPedido:
             self.session.rollback()
             raise e
 
+    def salvar(self, entidade):
+        """
+        Salva ou atualiza uma entidade no banco de dados.
+        """
+        try:
+            self.session.merge(entidade)
+            self.session.commit()
+        except Exception as e:
+            self.session.rollback()
+            raise e
+
     def obter_pedido_por_id(self, id_pedido: str) -> Pedido:
         """
         Busca um pedido no banco e retorna como objeto de domínio.
@@ -116,6 +127,7 @@ class RepositorioProduto:
         except Exception as e:
             self.session.rollback()
             raise e
+
 
     def obter_produto_por_id(self, id_produto: str) -> Produto:
         """

@@ -35,8 +35,9 @@ def iniciar_consumidor_produtos():
 
             # Declarar a fila
             channel.queue_declare(queue='eventos_produtos', durable=True)
+            channel.queue_declare(queue='eventos_precos', durable=True)
 
-            def callback(ch, method, properties, body):
+            def callback_produtos(ch, method, properties, body):
                 logger.info(f"Recebida mensagem: {body}")
                 # Converte o corpo da mensagem de JSON para dicionário
                 mensagem = json.loads(body)
@@ -48,7 +49,23 @@ def iniciar_consumidor_produtos():
                 except Exception as e:
                     logger.error(f"Erro ao inserir no MongoDB: {e}")
 
-            channel.basic_consume(queue='eventos_produtos', on_message_callback=callback, auto_ack=True)
+            def callback_precos(ch, method, properties, body):
+                logger.info(f"Recebida mensagem de atualização de preço: {body}")
+                # Converte o corpo da mensagem de JSON para dicionário
+                mensagem = json.loads(body)
+
+                # Atualização no MongoDB
+                try:
+                    collection.update_one(
+                        {'_id': mensagem['_id']},
+                        {'$set': {'preco': mensagem['preco']}}
+                    )
+                    logger.info(f"Preço atualizado no MongoDB: {mensagem}")
+                except Exception as e:
+                    logger.error(f"Erro ao atualizar preço no MongoDB: {e}")
+
+            channel.basic_consume(queue='eventos_produtos', on_message_callback=callback_produtos, auto_ack=True)
+            channel.basic_consume(queue='eventos_precos', on_message_callback=callback_precos, auto_ack=True)
 
             logger.info("Conexão bem-sucedida com o RabbitMQ. Esperando mensagens. Para sair, pressione CTRL+C.")
             channel.start_consuming()

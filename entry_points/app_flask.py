@@ -4,11 +4,12 @@ from flask_cors import CORS
 from flask_restx import Api, Resource, fields
 from adapters import repositorio_mongo
 from camada_servico.barramento_mensagens import BarramentoMensagens
+from camada_servico.servicos import ServicoProduto
 from config import RABBITMQ_URL
-from camada_servico.manipuladores_comando import manipular_adicionar_produto
+from camada_servico.manipuladores_comando import manipular_adicionar_produto, manipular_atualizar_preco_produto, manipular_atualizar_produto
 from camada_servico.manipuladores_consulta import manipular_consultar_detalhes_produto
 from domain.consultas import ConsultarDetalhesProduto
-from domain.comandos import AdicionarProdutoComando
+from domain.comandos import AdicionarProdutoComando, AtualizarPrecoProdutoComando, RemoverProdutoComando, AtualizarProdutoComando
 from adapters.repositorio_mongo import RepositorioConsultaMongoDB
 from adapters.repositorio import RepositorioProduto
 
@@ -65,6 +66,37 @@ class ProdutoResource(Resource):
         repositorio = RepositorioConsultaMongoDB()
         produto = manipular_consultar_detalhes_produto(consulta, repositorio)
         return make_response(jsonify(produto), 200)
+
+    @ns_produtos.doc("atualizar_produto")
+    @ns_produtos.expect(produto_model)
+    def put(self, id_produto):
+        """
+        Atualiza todos os detalhes de um produto pelo ID.
+        """
+        dados = request.json
+        comando = AtualizarProdutoComando(
+            id_produto=id_produto,
+            nome=dados["nome"],
+            descricao=dados["descricao"],
+            preco=dados["preco"],
+            quantidade_estoque=dados["quantidade_estoque"]
+        )
+        # Inicializando o repositório
+        repositorio = RepositorioProduto()
+        servico = ServicoProduto(repositorio, BarramentoMensagens())
+        manipular_atualizar_produto(comando, servico)
+        return {"message": "Produto atualizado com sucesso"}, 200
+
+    @ns_produtos.doc("remover_produto")
+    def delete(self, id_produto):
+        """
+        Remove um produto pelo ID.
+        """
+        comando = RemoverProdutoComando(id_produto=id_produto)
+        # Inicializando o repositório
+        repositorio = RepositorioProduto()
+        repositorio.excluir_produto(id_produto)
+        return {"message": "Produto removido com sucesso"}, 200
 
 @ns_produtos.route("/")
 class ProdutoListaResource(Resource):

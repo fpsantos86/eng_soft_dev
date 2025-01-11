@@ -45,6 +45,17 @@ class PedidoCriadoEvento:
             f"id_pedido={self.id_pedido}, id_cliente={self.id_cliente}, itens={self.itens})"
         )    
 
+@dataclass
+class PrecoProdutoAtualizado:
+    def __init__(self, id_produto, novo_preco):
+        self.id_produto = id_produto
+        self.novo_preco = novo_preco
+
+    def to_dict(self):
+        return {
+            "id_produto": self.id_produto,
+            "novo_preco": self.novo_preco
+        }
 
 @dataclass
 class StatusPedidoAtualizadoEvento:

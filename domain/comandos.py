@@ -18,7 +18,13 @@ class AtualizarPrecoProdutoComando:
 class RemoverProdutoComando:
     id_produto: str
 
-
+@dataclass
+class AtualizarProdutoComando:
+    id_produto: str
+    nome: str
+    descricao: str
+    preco: float
+    quantidade_estoque: int
 
 @dataclass
 class CriarPedidoComando:

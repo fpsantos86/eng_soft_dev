@@ -18,6 +18,17 @@ class Produto:
             raise ValueError("Quantidade em estoque insuficiente.")
         self.quantidade_estoque -= quantidade
 
+    def atualizar_detalhes(self, nome, descricao, preco, quantidade_estoque):
+        if preco <= 0:
+            raise ValueError("O preço deve ser maior que zero.")
+        if quantidade_estoque < 0:
+            raise ValueError("A quantidade em estoque não pode ser negativa.")
+        
+        self.nome = nome
+        self.descricao = descricao
+        self.preco = preco
+        self.quantidade_estoque = quantidade_estoque
+
 class ItemPedido:
     """
     Representa um item dentro de um pedido.

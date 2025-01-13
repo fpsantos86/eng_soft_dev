@@ -27,7 +27,7 @@ class RepositorioConsultaMongoDB:
         """
         Retorna todos os produtos.
         """
-        return list(self.collection.find({}))
+        return list(self.collection.find({},{'_id': False}))
 
     def excluir(self, id_produto):
         """

@@ -1,5 +1,4 @@
-import threading
-from flask import Flask, json, make_response, request, jsonify
+from flask import Flask, make_response, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_restx import Api, Resource, fields
 from adapters import repositorio_mongo
@@ -9,20 +8,23 @@ from config import RABBITMQ_URL
 from camada_servico.manipuladores_comando import manipular_adicionar_produto, manipular_atualizar_preco_produto, manipular_atualizar_produto
 from camada_servico.manipuladores_consulta import manipular_consultar_detalhes_produto
 from domain.consultas import ConsultarDetalhesProduto
-from domain.comandos import AdicionarProdutoComando, AtualizarPrecoProdutoComando, RemoverProdutoComando, AtualizarProdutoComando
+from domain.comandos import AdicionarProdutoComando, RemoverProdutoComando, AtualizarProdutoComando
 from adapters.repositorio_mongo import RepositorioConsultaMongoDB
 from adapters.repositorio import RepositorioProduto
 
-from camada_servico.consumidor_eventos import iniciar_consumidor_produtos
-
 app = Flask(__name__)
 # Adicione a configuração de CORS
-CORS(app, resources={r"/*": {"origins": "*"}})
+CORS(app, resources={r"/*": {"origins": "*"}})  # Permite todas as origens
 
-api = Api(app, title="API do Catálogo de Produtos", version="1.0", description="Documentação da API do Catálogo")
+# Adicione o prefixo /api/produtos
+api = Api(app, 
+          title="API do Catálogo de Produtos", 
+          version="1.0", 
+          description="Documentação da API do Catálogo", 
+          prefix="/api/produtos")
 
 # Namespace para organizar os endpoints
-ns_produtos = api.namespace("produtos", description="Operações relacionadas aos produtos")
+ns_produtos = api.namespace("", description="Operações relacionadas aos produtos")
 
 # Modelo de produto para o Swagger
 produto_model = api.model("Produto", {
@@ -52,7 +54,6 @@ produto_model = api.model("Produto", {
         example=10
     )
 })
-
 
 @ns_produtos.route("/<string:id_produto>")
 class ProdutoResource(Resource):
@@ -119,13 +120,23 @@ class ProdutoListaResource(Resource):
         barramento = BarramentoMensagens()
         barramento.configurar_exchange("eventos_produtos", "direct")
         barramento.configurar_fila("eventos_produtos", "eventos_produtos", "produto_key")
-        manipular_adicionar_produto(comando, repositorio,barramento)
+        manipular_adicionar_produto(comando, repositorio, barramento)
         return {"message": "Produto adicionado com sucesso"}, 201
 
-if __name__ == "__main__":
-   
-     # Inicia o consumidor em outra thread
-    consumidor_thread = threading.Thread(target=iniciar_consumidor_produtos,daemon=True)
-    consumidor_thread.start()
-    # Inicia o Flask na thread principal
-    app.run(debug=True)
+    @ns_produtos.doc("listar_produtos")
+    def get(self):
+        """
+        Retorna a lista de todos os produtos.
+        """
+        # Inicializando o repositório
+        repositorio = RepositorioConsultaMongoDB()
+        produtos = repositorio.listar_todos()
+        
+        return make_response(jsonify(produtos), 200)
+
+@app.after_request
+def after_request(response):
+    response.headers.add('Access-Control-Allow-Origin', '*')
+    response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
+    response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+    return response

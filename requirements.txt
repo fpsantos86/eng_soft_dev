@@ -7,6 +7,6 @@ pytest
 pytest-mock
 dataclasses-json
 python-dotenv
-flask-restx
+flask-restx # swagger
 pika
 pymongo

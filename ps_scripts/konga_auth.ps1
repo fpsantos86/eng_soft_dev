@@ -1,47 +1,62 @@
-# Configurações
-$KONGA_LOGIN_URL = "http://localhost:31337/login"  # URL do Konga Login
-$KONGA_URL = "http://localhost:31337/"  # URL do Konga Login
-$KONGA_PAYLOAD = @{
-    identifier = "admin"  # Usuário
-    password = "admin123" # Senha
-} | ConvertTo-Json -Depth 10
+# Definição de variáveis
+$KONGA_URL = "http://localhost:31337"  # URL do Konga
+$USERNAME = "admin"  # Nome de usuário
+$PASSWORD = "admin123"  # Senha
 
-$HEADERS = @{
-    "Accept" = "application/json,text/plain,*/*"
-    "Content-Type" = "application/json"
-}
+# Realizando login no Konga
+Write-Host "Autenticando no Konga..."
+$loginPayload = @{ identifier = $USERNAME; password = $PASSWORD } | ConvertTo-Json -Depth 10
 
-# Realizar Login no Konga
-try {
-    Write-Host "Autenticando no Konga..."
-    $response = Invoke-RestMethod -Uri $KONGA_LOGIN_URL `
-                                  -Method Post `
-                                  -Body $KONGA_PAYLOAD `
-                                  -Headers $HEADERS
+$headers = @{ "Content-Type" = "application/json" }
+$response = Invoke-RestMethod -Uri "$KONGA_URL/login" -Method Post -Body $loginPayload -Headers $headers
 
-    $authToken = $response.token
-    Write-Host "Autenticação bem-sucedida! Token: $authToken"
-} catch {
-    Write-Host "Falha ao autenticar no Konga. Verifique as credenciais."
-    Write-Host $_
-    exit
-}
+if ($response -and $response.token) {
+    $token = $response.token
+    Write-Host "Autenticação bem-sucedida. Token: $token"
 
-# Conectar no Kong usando o token do Konga
-$HEADERS_AUTH = @{
-    "Authorization" = "Bearer $authToken"
-}
+    # Configurando cabeçalhos com o token de autenticação
+    $authHeaders = @{ 
+        "Content-Type" = "application/json"
+        "Authorization" = "Bearer $token"
+    }
 
-try {
-    Write-Host "Testando conexão com o Kong..."
-    $kongResponse = Invoke-WebRequest  -Uri "$KONGA_URL/#!/dashboard" `
-                                      -Method Get `
-                                      -Headers $HEADERS_AUTH
+    # Verificando conexões existentes
+    Write-Host "Verificando conexões existentes no Konga..."
+    $existingConnections = Invoke-RestMethod -Uri "$KONGA_URL/api/kongnode" -Method Get -Headers $authHeaders
 
-    $statusCode = $kongResponse.StatusCode
-    Write-Host "Conexão com o Kong retornou o status: $statusCode"
-    
-} catch {
-    Write-Host "Falha ao conectar ao Kong."
-    Write-Host $_
+    $connection = $existingConnections | Where-Object { $_.kong_admin_url -eq "http://kong:8001" }
+
+    if ($connection) {
+        Write-Host "Conexão já existe. ID: $($connection.id)"
+    } else {
+        Write-Host "Criando nova conexão no Konga..."
+        $connectionPayload = @{ 
+            type = "default"
+            name = "kong"
+            kong_admin_url = "http://kong:8001"
+            kong_api_key = ""
+            username = ""
+            password = ""
+        } | ConvertTo-Json -Depth 10
+
+        $newConnection = Invoke-RestMethod -Uri "$KONGA_URL/api/kongnode" -Method Post -Body $connectionPayload -Headers $authHeaders
+        Write-Host "Nova conexão criada. ID: $($newConnection.id)"
+    }
+
+    # Testando conexão com o Kong
+    $connectionId = $connection?.id -or $newConnection?.id
+    if ($connectionId) {
+        Write-Host "Testando conexão com o Kong. ID da conexão: $connectionId"
+        $testResponse = Invoke-RestMethod -Uri "$KONGA_URL/kong?connection_id=$connectionId" -Method Get -Headers $authHeaders -ErrorAction Stop
+
+        if ($testResponse) {
+            Write-Host "Conexão com o Kong testada com sucesso. Status: $($testResponse.status)"
+        } else {
+            Write-Host "Falha ao testar a conexão com o Kong."
+        }
+    } else {
+        Write-Host "Nenhuma conexão disponível para testar."
+    }
+} else {
+    Write-Host "Falha na autenticação no Konga."
 }

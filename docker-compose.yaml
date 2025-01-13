@@ -94,9 +94,10 @@ services:
       postgres:
         condition: service_healthy
     volumes:
-      - ./swagger:/app/swagger  # Certifique-se de que o Swagger está sendo copiado corretamente
+      - ./static/swaggerui:/app/static/swaggerui  # Certifique-se de que o Swagger está sendo copiado corretamente
     networks:
-      - eng-soft-dev        
+      - eng-soft-dev
+      - kong-net  # Adicione esta linha para incluir o app_flask na rede kong-net
 
   consumidor_eventos:
     build:
@@ -165,6 +166,7 @@ services:
     restart: always
     networks:
       - kong-net
+      - eng-soft-dev  # Adicione esta linha para incluir o kong na rede eng-soft-dev
     environment:
       KONG_PG_HOST: kong-db
       KONG_PG_PASSWORD: kong
@@ -179,7 +181,7 @@ services:
     depends_on:
       - kong-db
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://kong:9011"]
+      test: ["CMD", "curl", "-f", "http://kong:8001"]
       interval: 5s
       timeout: 2s
       retries: 15

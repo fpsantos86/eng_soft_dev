@@ -10,7 +10,6 @@ volumes:
   mongo_data:
   kong-datastore:
   keycloak-datastore:  
-  swagger_data:  # Adicione um volume para o Swagger, se necessário
 
 services:
   postgres:
@@ -19,7 +18,7 @@ services:
     environment:
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-      POSTGRES_DB: cqrs_db
+      POSTGRES_DB: produtos_db
     ports:
       - "6543:5432"
     volumes:
@@ -64,7 +63,7 @@ services:
 
   app:
     build:
-      context: .
+      context: ./produtos_service 
       dockerfile: Dockerfile.app
     container_name: app_flask
     environment:
@@ -72,12 +71,12 @@ services:
       POSTGRES_PORT: 5432
       POSTGRES_USER: admin
       POSTGRES_PASSWORD: admin
-      POSTGRES_DB: cqrs_db
+      POSTGRES_DB: produtos_db
       MONGO_HOST: mongodb
       MONGO_PORT: 27017
       MONGO_USER: admin
       MONGO_PASSWORD: admin123
-      MONGO_DB_NAME: cqrs_db
+      MONGO_DB_NAME: produtos_db
       MONGO_COLLECTION_NAME: produtos
       RABBITMQ_HOST: rabbitmq
       RABBITMQ_PORT: 5672
@@ -93,15 +92,14 @@ services:
         condition: service_started
       postgres:
         condition: service_healthy
-    volumes:
-      - ./static/swaggerui:/app/static/swaggerui  # Certifique-se de que o Swagger está sendo copiado corretamente
+    
     networks:
       - eng-soft-dev
-      - kong-net  # Adicione esta linha para incluir o app_flask na rede kong-net
+      - kong-net  # Inclua o app_flask na rede kong-net
 
   consumidor_eventos:
     build:
-      context: .
+      context: ./produtos_service
       dockerfile: Dockerfile.app
     container_name: consumidor_eventos
     depends_on:
@@ -120,7 +118,7 @@ services:
       MONGO_PORT: 27017
       MONGO_USER: admin
       MONGO_PASSWORD: admin123
-      MONGO_DB_NAME: cqrs_db
+      MONGO_DB_NAME: produtos_db
       MONGO_COLLECTION_NAME: produtos
     command: python /app/camada_servico/consumidor_eventos.py
     networks:
@@ -147,8 +145,8 @@ services:
 
   kong-migration:
     build: 
-      context: .
-      dockerfile: ./Dockerfile.kong
+      context: ./produtos_service
+      dockerfile: Dockerfile.kong
     command: "kong migrations bootstrap"
     networks:
       - kong-net
@@ -161,12 +159,12 @@ services:
 
   kong:
     build: 
-      context: .
-      dockerfile: ./Dockerfile.kong
+      context: ./produtos_service
+      dockerfile: Dockerfile.kong
     restart: always
     networks:
       - kong-net
-      - eng-soft-dev  # Adicione esta linha para incluir o kong na rede eng-soft-dev
+      - eng-soft-dev  # Inclua o kong na rede eng-soft-dev
     environment:
       KONG_PG_HOST: kong-db
       KONG_PG_PASSWORD: kong

@@ -2,14 +2,24 @@ import uuid
 
 
 class Produto:
-    def __init__(self, nome, descricao, preco, quantidade_estoque, id_produto=None):
-        self.id_produto = id_produto or str(uuid.uuid4())
+    def __init__(self, nome, descricao, preco, quantidade_estoque, id=None):
+        self.id = id or str(uuid.uuid4())
         self.nome = nome
         self.descricao = descricao
         self.preco = preco
         self.quantidade_estoque = quantidade_estoque
 
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "nome": self.nome,
+            "descricao": self.descricao,
+            "preco": self.preco,
+            "quantidade_estoque": self.quantidade_estoque
+        }
+
     def atualizar_preco(self, novo_preco):
+        novo_preco = float(novo_preco)  # Converter para float
         if novo_preco <= 0:
             raise ValueError("O preço deve ser maior que zero.")
         preco_antigo = self.preco
@@ -22,6 +32,7 @@ class Produto:
         self.quantidade_estoque -= quantidade
 
     def atualizar_detalhes(self, nome, descricao, preco, quantidade_estoque):
+        preco = float(preco)  # Converter para float
         if preco <= 0:
             raise ValueError("O preço deve ser maior que zero.")
         if quantidade_estoque < 0:
@@ -36,13 +47,13 @@ class ItemPedido:
     """
     Representa um item dentro de um pedido.
     """
-    def __init__(self, id_produto: str, quantidade: int, preco: float):
-        self.id_produto = id_produto
+    def __init__(self, id: str, quantidade: int, preco: float):
+        self.id = id
         self.quantidade = quantidade
         self.preco = preco  # Adiciona o preço ao item
 
     def __repr__(self):
-        return f"ItemPedido(id_produto={self.id_produto}, quantidade={self.quantidade}, preco={self.preco})"
+        return f"ItemPedido(id={self.id}, quantidade={self.quantidade}, preco={self.preco})"
 
 class Pedido:
     """

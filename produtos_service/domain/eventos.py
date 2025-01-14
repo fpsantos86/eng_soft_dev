@@ -3,8 +3,8 @@ from typing import List
 
 @dataclass
 class ProdutoAdicionadoEvento:
-    def __init__(self, id_produto, nome, descricao, preco, quantidade_estoque):
-        self.id_produto = id_produto
+    def __init__(self, id, nome, descricao, preco, quantidade_estoque):
+        self.id = id
         self.nome = nome
         self.descricao = descricao
         self.preco = preco
@@ -12,7 +12,7 @@ class ProdutoAdicionadoEvento:
     
     def to_dict(self):
         return {
-            "id_produto": self.id_produto,
+            "id": self.id,
             "nome": self.nome,
             "descricao": self.descricao,
             "preco": self.preco,
@@ -21,15 +21,22 @@ class ProdutoAdicionadoEvento:
 
 @dataclass
 class PrecoProdutoAtualizadoEvento:
-    id_produto: str
+    id: str
     preco_antigo: float
     preco_novo: float
 
 @dataclass
 class ProdutoRemovidoEvento:
-    id_produto: str
-    
-    
+    id: str
+
+@dataclass
+class ProdutoAtualizadoEvento:
+    id: str
+    nome: str
+    descricao: str
+    preco: float
+    quantidade_estoque: int
+
 @dataclass
 class PedidoCriadoEvento:
     """
@@ -37,7 +44,7 @@ class PedidoCriadoEvento:
     """
     id_pedido: str
     id_cliente: str
-    itens: List[dict]  # Lista de itens no formato {"id_produto": str, "quantidade": int}
+    itens: List[dict]  # Lista de itens no formato {"id": str, "quantidade": int}
 
     def __repr__(self):
         return (
@@ -47,13 +54,13 @@ class PedidoCriadoEvento:
 
 @dataclass
 class PrecoProdutoAtualizado:
-    def __init__(self, id_produto, novo_preco):
-        self.id_produto = id_produto
+    def __init__(self, id, novo_preco):
+        self.id = id
         self.novo_preco = novo_preco
 
     def to_dict(self):
         return {
-            "id_produto": self.id_produto,
+            "id": self.id,
             "novo_preco": self.novo_preco
         }
 

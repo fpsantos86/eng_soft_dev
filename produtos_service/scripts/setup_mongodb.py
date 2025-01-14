@@ -20,7 +20,7 @@ collection = db[MONGO_COLLECTION_NAME]
 
 #Inserir um documento de exemplo para garantir que tudo está funcionando
 documento_exemplo = {
-    "id_produto": "12345",
+    "id": "12345",
     "nome": "Produto Exemplo",
     "descricao": "Descrição do produto exemplo",
     "preco": 99.99,
@@ -31,5 +31,5 @@ collection.insert_one(documento_exemplo)
 print(f"Banco de dados '{MONGO_DB_NAME}' e coleção '{MONGO_COLLECTION_NAME}' criados com sucesso!")
 print(f"Documento inserido: {documento_exemplo}")
 
-collection.delete_one({'id_produto':"12345"})
+collection.delete_one({'id':"12345"})
 print(f"Documento excluido: {documento_exemplo}")

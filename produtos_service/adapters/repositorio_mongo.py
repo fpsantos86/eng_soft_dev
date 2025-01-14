@@ -12,18 +12,18 @@ class RepositorioConsultaMongoDB:
         """
         Salva ou atualiza um produto na coleção.
         """
-        produto["id_produto"] = str(uuid.UUID(produto["id_produto"]))
+        produto["id"] = str(uuid.UUID(produto["id"]))
         self.collection.update_one(
-            {"id_produto": produto["id_produto"]},  # Filtro
+            {"id": produto["id"]},  # Filtro
             {"$set": produto},  # Dados a atualizar
             upsert=True  # Insere se não existir
         )
 
-    def obter_por_id(self, id_produto):
+    def obter_por_id(self, id):
         """
         Obtém um produto pelo ID.
         """
-        return self.collection.find_one({"id_produto": str(uuid.UUID(id_produto))})
+        return self.collection.find_one({"id": str(uuid.UUID(id))})
 
     def listar_todos(self):
         """
@@ -31,8 +31,8 @@ class RepositorioConsultaMongoDB:
         """
         return list(self.collection.find({},{'_id': False}))
 
-    def excluir(self, id_produto):
+    def excluir(self, id):
         """
         Exclui um produto pelo ID.
         """
-        self.collection.delete_one({"id_produto": str(uuid.UUID(id_produto))})
+        self.collection.delete_one({"id": str(uuid.UUID(id))})

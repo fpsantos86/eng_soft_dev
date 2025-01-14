@@ -4,27 +4,37 @@ from camada_servico.barramento_mensagens import BarramentoMensagens
 from domain.modelo import Pedido
 from domain.eventos import PrecoProdutoAtualizadoEvento
 from domain.eventos import PedidoCriadoEvento,StatusPedidoAtualizadoEvento
+from domain.eventos import ProdutoRemovidoEvento
 
 class ServicoProduto:
     def __init__(self, repositorio: RepositorioProduto, barramento_eventos:BarramentoMensagens):
         self.repositorio = repositorio
         self.barramento_eventos = barramento_eventos
 
-    def atualizar_preco(self, id_produto, novo_preco):
-        produto = self.repositorio.obter_produto_por_id(id_produto)
+    def atualizar_preco(self, id, novo_preco):
+        produto = self.repositorio.obter_produto_por_id(id)
         if not produto:
-            raise ValueError(f"Produto com ID {id_produto} não encontrado.")
+            raise ValueError(f"Produto com ID {id} não encontrado.")
         
         preco_antigo, preco_atualizado = produto.atualizar_preco(novo_preco)
         self.repositorio.salvar_produto(produto)
 
         # Publicar evento
         evento = PrecoProdutoAtualizadoEvento(
-            id_produto=id_produto, preco_antigo=preco_antigo, preco_novo=preco_atualizado
+            id=id, preco_antigo=preco_antigo, preco_novo=preco_atualizado
         )
         self.barramento_eventos.publicar(evento)
 
+    def remover_produto(self, id):
+        produto = self.repositorio.obter_produto_por_id(id)
+        if not produto:
+            raise ValueError(f"Produto com ID {id} não encontrado.")
+        
+        self.repositorio.excluir_produto(id)
 
+        # Publicar evento
+        evento = ProdutoRemovidoEvento(id=id)
+        self.barramento_eventos.publicar(evento)
 
 class ServicoPedido:
     def __init__(self, repositorio: RepositorioPedido, barramento_eventos:BarramentoMensagens):

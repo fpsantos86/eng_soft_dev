@@ -19,7 +19,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 class Produto(Base):
     __tablename__ = "produtos"
 
-    id_produto = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, index=True)
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, unique=True, index=True)
     nome = Column(String, nullable=False)
     descricao = Column(String)
     preco = Column(Float, nullable=False)
@@ -40,7 +40,7 @@ class ItemPedido(Base):
 
     id_item = Column(Integer, primary_key=True, autoincrement=True)
     id_pedido = Column(String, ForeignKey("pedidos.id_pedido"), nullable=False)
-    id_produto = Column(String, nullable=False)
+    id= Column(String, nullable=False)
     quantidade = Column(Integer, nullable=False)
     preco = Column(Float, nullable=False)
     pedido = relationship("Pedido", back_populates="itens")

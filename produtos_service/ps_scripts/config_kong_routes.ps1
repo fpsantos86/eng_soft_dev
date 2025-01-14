@@ -21,22 +21,25 @@ $serviceData = @{
     url  = "http://app_flask:5000"  # Certifique-se de que o URL está correto e acessível pelo Kong
 } | ConvertTo-Json -Depth 10
 
-$serviceResponse = Invoke-RestMethod -Uri "$KONG_ADMIN_URL/services" `
-                                     -Method Post `
-                                     -Body $serviceData `
-                                     -ContentType "application/json"
-
-$SERVICE_ID = $serviceResponse.id
-Write-Host "Serviço criado com ID: $SERVICE_ID"
+try {
+    $serviceResponse = Invoke-RestMethod -Uri "$KONG_ADMIN_URL/services" `
+                                         -Method Post `
+                                         -Body $serviceData `
+                                         -ContentType "application/json"
+    $SERVICE_ID = $serviceResponse.id
+    Write-Host "Serviço criado com ID: $SERVICE_ID"
+} catch {
+    Write-Host "Erro ao criar o serviço: $_"
+    exit 1
+}
 
 # Criando as rotas
 $routes = @(
-    @{ methods = @("GET");    paths = @("/{id_produto}") },
-    @{ methods = @("GET");    paths = @("/{id_produto}/") },
-    @{ methods = @("PUT");    paths = @("/{id_produto}") },
-    @{ methods = @("PUT");    paths = @("/{id_produto}/") },
-    @{ methods = @("DELETE"); paths = @("/{id_produto}") },
-    @{ methods = @("DELETE"); paths = @("/{id_produto}/") },
+    @{ methods = @("GET");    paths = @("/{id}") },
+    @{ methods = @("GET");    paths = @("/{id}/") },
+    @{ methods = @("PUT");    paths = @("/{id}") },
+    @{ methods = @("PUT");    paths = @("/{id}/") },
+    @{ methods = @("DELETE"); paths = @("/{id}") },
     @{ methods = @("POST");   paths = @("/")},
     @{ methods = @("GET");    paths = @("/")}
 )
@@ -78,15 +81,22 @@ foreach ($route in $routes) {
 $bodyCors = @{
     name = "cors"
     config = @{
-        origins = @("*")
+        origins = @("http://localhost:3000")  # Allow requests from localhost:3000
         methods = @("GET", "POST", "PUT", "DELETE", "OPTIONS")
-        headers = @("Accept", "Authorization", "Content-Type")
+        headers = @("Origin", "Authorization", "Content-Type", "Accept", "X-Requested-With")
+        exposed_headers = @("X-Total-Count")
         credentials = $false
+        max_age = 3600
     }
 } | ConvertTo-Json -Depth 10
 
 # Enviar a requisição com o corpo JSON
-Invoke-RestMethod -Method Post -Uri "$KONG_ADMIN_URL/services/$SERVICE_ID/plugins" -Body $bodyCors -ContentType "application/json"
+try {
+    Invoke-RestMethod -Method Post -Uri "$KONG_ADMIN_URL/services/$SERVICE_ID/plugins" -Body $bodyCors -ContentType "application/json"
+    Write-Host "Plugin CORS configurado com sucesso."
+} catch {
+    Write-Host "Erro ao configurar o plugin CORS: $_"
+}
 
 # Configuração do plugin request-transformer para permitir requisições JSON
 $bodyTransformer = @{
@@ -99,6 +109,11 @@ $bodyTransformer = @{
 } | ConvertTo-Json -Depth 10
 
 # Enviar a requisição com o corpo JSON
-Invoke-RestMethod -Method Post -Uri "$KONG_ADMIN_URL/services/$SERVICE_ID/plugins" -Body $bodyTransformer -ContentType "application/json"
+try {
+    Invoke-RestMethod -Method Post -Uri "$KONG_ADMIN_URL/services/$SERVICE_ID/plugins" -Body $bodyTransformer -ContentType "application/json"
+    Write-Host "Plugin request-transformer configurado com sucesso."
+} catch {
+    Write-Host "Erro ao configurar o plugin request-transformer: $_"
+}
 
 Write-Host "Configuração concluída. Verifique as rotas no Kong."

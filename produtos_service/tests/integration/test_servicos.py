@@ -9,7 +9,7 @@ def test_criar_pedido():
     barramento_mock = Mock()
     servico = ServicoPedido(repositorio_mock, barramento_mock)
 
-    itens = [ItemPedido(id_produto="prod1", quantidade=2, preco=10.0)]
+    itens = [ItemPedido(id="prod1", quantidade=2, preco=10.0)]
     servico.criar_pedido("pedido1", "cliente1", itens)
 
     repositorio_mock.salvar_pedido.assert_called_once()
@@ -37,7 +37,7 @@ def test_atualizar_status():
 
 def test_atualizar_preco():
     produto = Produto(
-        id_produto="prod1",
+        id="prod1",
         nome="Produto 1",
         descricao="Descrição do Produto 1",
         preco=20.0,
@@ -53,7 +53,7 @@ def test_atualizar_preco():
     repositorio_mock.salvar_produto.assert_called_once_with(produto)
     barramento_mock.publicar.assert_called_once_with(
         PrecoProdutoAtualizadoEvento(
-            id_produto="prod1",
+            id="prod1",
             preco_antigo=20.0,
             preco_novo=30.0
         )

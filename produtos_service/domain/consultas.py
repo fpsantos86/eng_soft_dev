@@ -2,7 +2,7 @@ from dataclasses import dataclass
 
 @dataclass
 class ConsultarDetalhesProduto:
-    id_produto: str
+    id: str
 
 @dataclass
 class ListarProdutos:
@@ -28,5 +28,5 @@ class ConsultarDetalhesProduto:
     """
     Representa uma consulta para obter detalhes de um produto.
     """
-    id_produto: str
+    id: str
     

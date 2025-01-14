@@ -22,7 +22,7 @@ class RepositorioPedido:
             for item in pedido.itens:
                 orm_item = ORMItemPedido(
                     id_pedido=pedido.id_pedido,
-                    id_produto=item.id_produto,
+                    id=item.id,
                     quantidade=item.quantidade,
                     preco=item.preco
                 )
@@ -54,7 +54,7 @@ class RepositorioPedido:
 
         itens = [
             ItemPedido(
-                id_produto=orm_item.id_produto,
+                id=orm_item.id,
                 quantidade=orm_item.quantidade,
                 preco=orm_item.preco
             )
@@ -77,7 +77,7 @@ class RepositorioPedido:
         for orm_pedido in orm_pedidos:
             itens = [
                 ItemPedido(
-                    id_produto=orm_item.id_produto,
+                    id=orm_item.id,
                     quantidade=orm_item.quantidade,
                     preco=orm_item.preco
                 )
@@ -117,7 +117,7 @@ class RepositorioProduto:
         """
         try:
             orm_produto = ORMProduto(
-                id_produto=uuid.UUID(produto.id_produto),
+                id=produto.id,
                 nome=produto.nome,
                 descricao=produto.descricao,
                 preco=produto.preco,
@@ -130,16 +130,16 @@ class RepositorioProduto:
             raise e
 
 
-    def obter_produto_por_id(self, id_produto: str) -> Produto:
+    def obter_produto_por_id(self, id: str) -> Produto:
         """
         Retorna um produto pelo ID.
         """
-        orm_produto = self.session.query(ORMProduto).filter_by(id_produto=uuid.UUID(id_produto)).first()
+        orm_produto = self.session.query(ORMProduto).filter_by(id=uuid.UUID(id)).first()
         if not orm_produto:
             return None
 
         return Produto(
-            id_produto=orm_produto.id_produto,
+            id=orm_produto.id,
             nome=orm_produto.nome,
             descricao=orm_produto.descricao,
             preco=orm_produto.preco,
@@ -153,7 +153,7 @@ class RepositorioProduto:
         orm_produtos = self.session.query(ORMProduto).all()
         return [
             Produto(
-                id_produto=orm_produto.id_produto,
+                id=orm_produto.id,
                 nome=orm_produto.nome,
                 descricao=orm_produto.descricao,
                 preco=orm_produto.preco,
@@ -162,12 +162,12 @@ class RepositorioProduto:
             for orm_produto in orm_produtos
         ]
 
-    def excluir_produto(self, id_produto: str):
+    def excluir_produto(self, id: str):
         """
         Exclui um produto pelo ID.
         """
         try:
-            orm_produto = self.session.query(ORMProduto).filter_by(id_produto=uuid.UUID(id_produto)).first()
+            orm_produto = self.session.query(ORMProduto).filter_by(id=uuid.UUID(id)).first()
             if orm_produto:
                 self.session.delete(orm_produto)
                 self.session.commit()

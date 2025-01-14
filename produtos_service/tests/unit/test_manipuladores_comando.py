@@ -11,7 +11,7 @@ def test_manipular_criar_pedido():
     barramento_mock = Mock()
 
     # Criar itens simulados
-    itens = [ItemPedido(id_produto="prod1", quantidade=2, preco=50.0)]
+    itens = [ItemPedido(id="prod1", quantidade=2, preco=50.0)]
     pedido_simulado = Pedido(id_pedido="pedido1", id_cliente="cliente1", itens=itens)
 
     # Configurar o mock para retornar o pedido simulado
@@ -21,7 +21,7 @@ def test_manipular_criar_pedido():
     comando = CriarPedidoComando(
         id_pedido="pedido1",
         id_cliente="cliente1",
-        itens=[{"id_produto": "prod1", "quantidade": 2}]
+        itens=[{"id": "prod1", "quantidade": 2}]
     )
 
     # Chamar o manipulador com os mocks

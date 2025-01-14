@@ -11,7 +11,7 @@ def manipular_consultar_detalhes_pedido(consulta: ConsultarDetalhesPedido, repos
         "id_pedido": pedido.id_pedido,
         "id_cliente": pedido.id_cliente,
         "status": pedido.status,
-        "itens": [{"id_produto": item.id_produto, "quantidade": item.quantidade} for item in pedido.itens],
+        "itens": [{"id": item.id, "quantidade": item.quantidade} for item in pedido.itens],
     }
 
 def manipular_listar_pedidos_cliente(consulta: ListarPedidosCliente, repositorio: RepositorioPedido):
@@ -36,13 +36,13 @@ def manipular_consultar_detalhes_produto(consulta: ConsultarDetalhesProduto, rep
     :param repositorio: Objeto do repositório que fornece os dados.
     :return: Dicionário contendo os detalhes do produto.
     """
-    produto = repositorio.obter_por_id(consulta.id_produto)
+    produto = repositorio.obter_por_id(consulta.id)
 
     if not produto:
-        raise ValueError(f"Produto com ID {consulta.id_produto} não encontrado.")
+        raise ValueError(f"Produto com ID {consulta.id} não encontrado.")
 
     produtoDto = {
-        "id_produto": produto.get("id_produto"),
+        "id": produto.get("id"),
         "nome": produto.get("nome"),
         "descricao": produto.get("descricao"),
         "preco": produto.get("preco"),
@@ -57,7 +57,7 @@ def consumir_evento_produto_adicionado(evento: ProdutoAdicionadoEvento, reposito
     Consome o evento de produto adicionado e grava no MongoDB.
     """
     produto = {
-        "id_produto": evento.id_produto,
+        "id": evento.id,
         "nome": evento.nome,
         "descricao": evento.descricao,
         "preco": evento.preco,

@@ -1,20 +1,29 @@
-from flask import Flask, make_response, request, jsonify, send_from_directory
+from flask import Flask, json, make_response, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_restx import Api, Resource, fields
 from adapters import repositorio_mongo
 from camada_servico.barramento_mensagens import BarramentoMensagens
 from camada_servico.servicos import ServicoProduto
 from config import RABBITMQ_URL
-from camada_servico.manipuladores_comando import manipular_adicionar_produto, manipular_atualizar_preco_produto, manipular_atualizar_produto
+from camada_servico.manipuladores_comando import manipular_adicionar_produto,  manipular_atualizar_produto, manipular_excluir_produto
 from camada_servico.manipuladores_consulta import manipular_consultar_detalhes_produto
 from domain.consultas import ConsultarDetalhesProduto
 from domain.comandos import AdicionarProdutoComando, RemoverProdutoComando, AtualizarProdutoComando
 from adapters.repositorio_mongo import RepositorioConsultaMongoDB
 from adapters.repositorio import RepositorioProduto
+import logging
+
+from domain.eventos import ProdutoAtualizadoEvento, ProdutoRemovidoEvento
+
+logging.basicConfig()
+LOGGER = logging.getLogger("reprod-case")
+LOGGER.setLevel(logging.DEBUG)
+LOGGER.info("Created LOGGER")
+logging.getLogger('flask_cors').level = logging.DEBUG
 
 app = Flask(__name__)
 # Adicione a configuração de CORS
-CORS(app, resources={r"/*": {"origins": "*"}})  # Permite todas as origens
+CORS(app, resources={r"/*": {"origins": "http://localhost:3000/"}})  # Permite todas as origens
 
 # Adicione o prefixo /api/produtos
 api = Api(app, 
@@ -23,13 +32,10 @@ api = Api(app,
           description="Documentação da API do Catálogo", 
           prefix="/api/produtos")
 
-# Namespace para organizar os endpoints
-ns_produtos = api.namespace("", description="Operações relacionadas aos produtos")
-
 # Modelo de produto para o Swagger
 produto_model = api.model("Produto", {
-    "id_produto": fields.String(
-        required=True,
+    "id": fields.String(  # Alterado de id para id
+        required=False,  # Não obrigatório
         description="ID do produto",
         example="123e4567-e89b-12d3-a456-426614174000"
     ),
@@ -55,28 +61,56 @@ produto_model = api.model("Produto", {
     )
 })
 
-@ns_produtos.route("/<string:id_produto>")
+produto_model_atualizacao = api.model("Produto", {
+    "nome": fields.String(
+        required=True,
+        description="Nome do produto",
+        example="Produto Exemplo"
+    ),
+    "descricao": fields.String(
+        required=True,
+        description="Descrição do produto",
+        example="Descrição do produto exemplo"
+    ),
+    "preco": fields.Float(
+        required=True,
+        description="Preço do produto",
+        example=99.99
+    ),
+    "quantidade_estoque": fields.Integer(
+        required=True,
+        description="Quantidade em estoque",
+        example=10
+    )
+})
+
+
+
+# Namespace para organizar os endpoints
+ns_produtos = api.namespace("", description="Operações relacionadas aos produtos")
+
+@ns_produtos.route("/<string:id>", strict_slashes=False)  # Alterado de id para id
 class ProdutoResource(Resource):
     @ns_produtos.doc("consultar_produto")
-    def get(self, id_produto):
+    def get(self, id):  # Alterado de id para id
         """
         Retorna os detalhes de um produto pelo ID.
         """
-        consulta = ConsultarDetalhesProduto(id_produto=id_produto)
+        consulta = ConsultarDetalhesProduto(id=id)  # Alterado de id para id
         # Inicializando o repositório
         repositorio = RepositorioConsultaMongoDB()
         produto = manipular_consultar_detalhes_produto(consulta, repositorio)
         return make_response(jsonify(produto), 200)
 
     @ns_produtos.doc("atualizar_produto")
-    @ns_produtos.expect(produto_model)
-    def put(self, id_produto):
+    @ns_produtos.expect(produto_model_atualizacao)
+    def put(self, id):  # Alterado de id para id
         """
         Atualiza todos os detalhes de um produto pelo ID.
         """
         dados = request.json
         comando = AtualizarProdutoComando(
-            id_produto=id_produto,
+            id=id,  # Alterado de id para id
             nome=dados["nome"],
             descricao=dados["descricao"],
             preco=dados["preco"],
@@ -84,22 +118,33 @@ class ProdutoResource(Resource):
         )
         # Inicializando o repositório
         repositorio = RepositorioProduto()
-        servico = ServicoProduto(repositorio, BarramentoMensagens())
-        manipular_atualizar_produto(comando, servico)
-        return {"message": "Produto atualizado com sucesso"}, 200
+
+        # Publicar evento de atualização
+        barramento = BarramentoMensagens()
+        barramento.configurar_exchange("atualizacao_produto", "direct")
+        barramento.configurar_fila("atualizacao_produto", "atualizacao_produto", "produto_key")
+        produto = manipular_atualizar_produto(comando, repositorio, barramento)
+
+        return make_response(produto.to_dict(), 200)
+    
 
     @ns_produtos.doc("remover_produto")
-    def delete(self, id_produto):
+    def delete(self, id):  # Alterado de id para id
         """
         Remove um produto pelo ID.
         """
-        comando = RemoverProdutoComando(id_produto=id_produto)
+        comando = RemoverProdutoComando(id=id) 
+        
         # Inicializando o repositório
         repositorio = RepositorioProduto()
-        repositorio.excluir_produto(id_produto)
+        barramento = BarramentoMensagens()
+        barramento.configurar_exchange("exclusao_produto", "direct")
+        barramento.configurar_fila("exclusao_produto", "exclusao_produto", "produto_key")
+        manipular_excluir_produto(comando, repositorio, barramento)
+        
         return {"message": "Produto removido com sucesso"}, 200
 
-@ns_produtos.route("/")
+@ns_produtos.route("/", strict_slashes=False)
 class ProdutoListaResource(Resource):
     @ns_produtos.expect(produto_model)
     @ns_produtos.doc("adicionar_produto")
@@ -109,7 +154,6 @@ class ProdutoListaResource(Resource):
         """
         dados = request.json
         comando = AdicionarProdutoComando(
-            id_produto=dados["id_produto"],
             nome=dados["nome"],
             descricao=dados["descricao"],
             preco=dados["preco"],
@@ -118,25 +162,61 @@ class ProdutoListaResource(Resource):
         # Inicializando o repositório
         repositorio = RepositorioProduto()
         barramento = BarramentoMensagens()
-        barramento.configurar_exchange("eventos_produtos", "direct")
-        barramento.configurar_fila("eventos_produtos", "eventos_produtos", "produto_key")
-        manipular_adicionar_produto(comando, repositorio, barramento)
-        return {"message": "Produto adicionado com sucesso"}, 201
+        barramento.configurar_exchange("inclusao_produto", "direct")
+        barramento.configurar_fila("inclusao_produto", "inclusao_produto", "produto_key")
+        produto = manipular_adicionar_produto(comando, repositorio, barramento)
+        return make_response(produto.to_dict(), 201)
 
     @ns_produtos.doc("listar_produtos")
     def get(self):
         """
-        Retorna a lista de todos os produtos.
+        Retorna a lista de produtos filtrada, paginada e ordenada.
         """
-        # Inicializando o repositório
+        # Obter os parâmetros da query string
+        filter_param = request.args.get("filter", "{}")
+        range_param = request.args.get("range", "[0,9]")
+        sort_param = request.args.get("sort", '["id", "ASC"]')
+
+        # Converter os parâmetros de string JSON para objetos Python
+        import json
+        filter_param = json.loads(filter_param)
+        range_param = json.loads(range_param)
+        sort_param = json.loads(sort_param)
+
+        # Desestruturar os parâmetros
+        start, end = range_param  # Indices para paginação
+        sort_field, sort_order = sort_param  # Campo e ordem para ordenação
+
+        # Consultar o repositório
         repositorio = RepositorioConsultaMongoDB()
         produtos = repositorio.listar_todos()
-        
-        return make_response(jsonify(produtos), 200)
+
+        # Aplicar ordenação
+        produtos = sorted(produtos, key=lambda x: x.get(sort_field), reverse=(sort_order == "DESC"))
+
+        # Aplicar paginação
+        produtos_paginados = produtos[start:end + 1]
+
+        # Formatar os produtos
+        produtos_formatados = [
+            {
+                "id": produto["id"],
+                "nome": produto["nome"],
+                "descricao": produto["descricao"],
+                "preco": produto["preco"],
+                "quantidade_estoque": produto["quantidade_estoque"]
+            }
+            for produto in produtos_paginados
+        ]
+
+        # Retornar no formato esperado pelo React-Admin
+        return make_response(jsonify({"data": produtos_formatados, "total": len(produtos)}), 200)
 
 @app.after_request
 def after_request(response):
+    
     response.headers.add('Access-Control-Allow-Origin', '*')
     response.headers.add('Access-Control-Allow-Headers', 'Content-Type,Authorization')
     response.headers.add('Access-Control-Allow-Methods', 'GET,PUT,POST,DELETE,OPTIONS')
+
     return response

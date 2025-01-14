@@ -5,7 +5,7 @@ from camada_servico.manipuladores_consulta import manipular_consultar_detalhes_p
 def test_manipular_consultar_detalhes_pedido():
     repositorio = Mock()
     repositorio.obter.return_value = Mock(
-        id_pedido="pedido1", id_cliente="cliente1", status="Pendente", itens=[Mock(id_produto="prod1", quantidade=2)]
+        id_pedido="pedido1", id_cliente="cliente1", status="Pendente", itens=[Mock(id="prod1", quantidade=2)]
     )
     consulta = ConsultarDetalhesPedido(id_pedido="pedido1")
 
@@ -15,7 +15,7 @@ def test_manipular_consultar_detalhes_pedido():
         "id_pedido": "pedido1",
         "id_cliente": "cliente1",
         "status": "Pendente",
-        "itens": [{"id_produto": "prod1", "quantidade": 2}],
+        "itens": [{"id": "prod1", "quantidade": 2}],
     }
 
 def test_manipular_listar_pedidos_cliente():

@@ -1,26 +1,27 @@
 from dataclasses import dataclass
 from typing import List, Dict
+import uuid
 
-@dataclass
 class AdicionarProdutoComando:
-    id_produto: str
-    nome: str
-    descricao: str
-    preco: float
-    quantidade_estoque: int
+    def __init__(self, nome, descricao, preco, quantidade_estoque, id=None):
+        self.id = id or str(uuid.uuid4())
+        self.nome = nome
+        self.descricao = descricao
+        self.preco = preco
+        self.quantidade_estoque = quantidade_estoque
 
 @dataclass
 class AtualizarPrecoProdutoComando:
-    id_produto: str
+    id: str
     novo_preco: float
 
 @dataclass
 class RemoverProdutoComando:
-    id_produto: str
+    id: str
 
 @dataclass
 class AtualizarProdutoComando:
-    id_produto: str
+    id: str
     nome: str
     descricao: str
     preco: float
@@ -33,7 +34,7 @@ class CriarPedidoComando:
     """
     id_pedido: str
     id_cliente: str
-    itens: List[Dict[str, int]]  # Lista de itens no formato {"id_produto": str, "quantidade": int}
+    itens: List[Dict[str, int]]  # Lista de itens no formato {"id": str, "quantidade": int}
 
 @dataclass
 class AtualizarStatusPedidoComando:

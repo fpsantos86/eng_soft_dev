@@ -2,7 +2,7 @@ import pytest
 from domain.modelo import Pedido, ItemPedido
 
 def test_criar_pedido():
-    itens = [ItemPedido(id_produto="prod1", quantidade=2, preco=50.0)]
+    itens = [ItemPedido(id="prod1", quantidade=2, preco=50.0)]
     pedido = Pedido(id_pedido="pedido1", id_cliente="cliente1", itens=itens)
     assert pedido.id_pedido == "pedido1"
     assert pedido.id_cliente == "cliente1"
@@ -29,8 +29,8 @@ def test_cancelar_pedido_concluido():
 
 def test_calcular_total_pedido():
     itens = [
-        ItemPedido(id_produto="prod1", quantidade=2, preco=50.0),
-        ItemPedido(id_produto="prod2", quantidade=1, preco=100.0),
+        ItemPedido(id="prod1", quantidade=2, preco=50.0),
+        ItemPedido(id="prod2", quantidade=1, preco=100.0),
     ]
     pedido = Pedido(id_pedido="pedido1", id_cliente="cliente1", itens=itens)
     assert pedido.calcular_total() == 200.0  # Verifica o total correto

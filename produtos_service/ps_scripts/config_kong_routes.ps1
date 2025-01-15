@@ -1,6 +1,6 @@
 # Configurando variáveis globais
 $KONG_ADMIN_URL = "http://localhost:9011"  # URL do Kong Admin API
-$SERVICE_NAME = "produtos-api"
+$SERVICE_NAME = "produtos-servico-cadastro"
 
 # Verificar se o serviço já existe e removê-lo
 Write-Host "Verificando se o serviço '$SERVICE_NAME' já existe..."
@@ -34,14 +34,13 @@ try {
 }
 
 # Criando as rotas
+# Criando as rotas
 $routes = @(
-    @{ methods = @("GET");    paths = @("/{id}") },
-    @{ methods = @("GET");    paths = @("/{id}/") },
-    @{ methods = @("PUT");    paths = @("/{id}") },
-    @{ methods = @("PUT");    paths = @("/{id}/") },
-    @{ methods = @("DELETE"); paths = @("/{id}") },
-    @{ methods = @("POST");   paths = @("/")},
-    @{ methods = @("GET");    paths = @("/")}
+    @{ methods = @("GET");    paths = @("/{id_produto}") },
+    @{ methods = @("PUT");    paths = @("/{id_produto}") },
+    @{ methods = @("DELETE"); paths = @("/{id_produto}") },
+    @{ methods = @("POST");   paths = @("/") },
+    @{ methods = @("GET");    paths = @("/") }
 )
 
 foreach ($route in $routes) {

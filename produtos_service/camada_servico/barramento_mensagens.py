@@ -6,18 +6,16 @@ class BarramentoMensagens:
     def __init__(self):
         self.connection = pika.BlockingConnection(pika.URLParameters(RABBITMQ_URL))
         self.channel = self.connection.channel()
-       
-        
 
     def configurar_exchange(self, exchange_name, exchange_type="direct"):
         """
-        Configura um exchange no RabbitMQ.
+        Declara um exchange no RabbitMQ.
         """
         self.channel.exchange_declare(exchange=exchange_name, exchange_type=exchange_type, durable=True)
     
     def configurar_fila(self, exchange_name, fila, routing_key):
         """
-        Configura uma fila vinculada a um exchange no RabbitMQ.
+        Declara e configura uma fila vinculada a um exchange no RabbitMQ.
         """
         self.channel.queue_declare(queue=fila, durable=True)
         self.channel.queue_bind(exchange=exchange_name, queue=fila, routing_key=routing_key)

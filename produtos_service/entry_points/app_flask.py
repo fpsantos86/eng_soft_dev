@@ -90,8 +90,14 @@ class ProdutoResource(Resource):
     def get(self, id):
         consulta = ConsultarDetalhesProduto(id=id)
         repositorio = RepositorioConsultaMongoDB()
-        produto = manipular_consultar_detalhes_produto(consulta, repositorio)
-        return make_response(jsonify(produto), 200)
+        try:
+            produto = manipular_consultar_detalhes_produto(consulta, repositorio)
+            if produto:
+                return make_response(jsonify(produto), 200)
+            else:
+                return make_response(jsonify({"message": "Produto não encontrado"}), 404)
+        except Exception as e:
+            return make_response(jsonify({"message": str(e)}), 500)
 
     @ns_produtos.doc("atualizar_produto")
     @ns_produtos.expect(produto_model_atualizacao)
@@ -113,11 +119,18 @@ class ProdutoResource(Resource):
     
     @ns_produtos.doc("remover_produto")
     def delete(self, id):
+        
+        repositorioReader = RepositorioConsultaMongoDB()
+        produto = repositorioReader.obter_por_id(id)
+        
+        if not produto:
+            return make_response(jsonify({"message": "Produto não encontrado"}), 404)
+        
         comando = RemoverProdutoComando(id=id)
-        repositorio = RepositorioProduto()
         barramento = BarramentoMensagens()
         barramento.configurar_exchange("produtos_eventos", "direct")
         barramento.configurar_fila("produtos_eventos", "exclusao_produto", "produto.exclusao")
+        repositorio = RepositorioProduto()
         manipular_excluir_produto(comando, repositorio, barramento)
         return {"message": "Produto removido com sucesso"}, 200
 

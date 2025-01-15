@@ -30,12 +30,7 @@ def serializar_mongo_objeto(obj):
         obj["_id"] = str(obj["_id"])
     return obj
 def manipular_consultar_detalhes_produto(consulta: ConsultarDetalhesProduto, repositorio: RepositorioConsultaMongoDB):
-    """
-    Manipulador para consultar os detalhes de um produto.
-    :param consulta: Instância de ConsultarDetalhesProduto contendo os dados da consulta.
-    :param repositorio: Objeto do repositório que fornece os dados.
-    :return: Dicionário contendo os detalhes do produto.
-    """
+   
     produto = repositorio.obter_por_id(consulta.id)
 
     if not produto:

@@ -36,7 +36,7 @@ def manipular_adicionar_produto(comando: AdicionarProdutoComando, repositorio: R
     )
 
     # Publicar o evento no barramento
-    barramento.publicar_produto("inclusao_produto", "produto.criacao", evento)
+    barramento.publicar_produto("produtos_eventos", "produto.criacao", evento)
     
     return produto
 
@@ -51,7 +51,7 @@ def manipular_excluir_produto(comando: RemoverProdutoComando, repositorio: Repos
     evento = ProdutoRemovidoEvento(id=comando.id)
     
     # Publicar o evento no barramento
-    barramento.publicar_produto("exclusao_produto", "produto.exclusao", evento)
+    barramento.publicar_produto("produtos_eventos", "produto.exclusao", evento)
 
 
 def manipular_atualizar_produto(comando: AtualizarProdutoComando, repositorio: RepositorioProduto, barramento: BarramentoMensagens):
@@ -77,7 +77,7 @@ def manipular_atualizar_produto(comando: AtualizarProdutoComando, repositorio: R
     )
     
     # Publicar o evento no barramento
-    barramento.publicar_produto("atualizacao_produto", "produto.atualizacao", evento)
+    barramento.publicar_produto("produtos_eventos", "produto.atualizacao", evento)
     
     return produto
 

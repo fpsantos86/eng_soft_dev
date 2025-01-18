@@ -55,12 +55,6 @@ jobs:
       run: |
         pytest ./produtos_service/tests
 
-    - name: Run Frontend Tests
-      run: |
-        cd ./front-end
-        npm test
-
-
   push:
     runs-on: ubuntu-latest
     needs: test

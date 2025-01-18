@@ -44,8 +44,9 @@ jobs:
     - name: Install Frontend Dependencies
       run: |
         cd front-end
-        npm install -g npm-force-resolutions
-        npm run fix-deps
+        yarn install
+        # npm install -g npm-force-resolutions
+        # npm run fix-deps
 
     - name: Build Frontend Application
       run: |

@@ -126,7 +126,7 @@ services:
   front-end:
     build:
       context: ./front-end
-      dockerfile: Dockerfile
+      dockerfile: Dockerfile.front_end
     image: fpsantos86/front-end_produtos:${GITHUB_RUN_NUMBER}
     container_name: front_end
     depends_on:

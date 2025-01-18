@@ -81,7 +81,7 @@ services:
       RABBITMQ_PORT: 5672
       RABBITMQ_USER: guest
       RABBITMQ_PASSWORD: guest
-      IS_DOCKER: true
+      IS_DOCKER: "true"
     ports:
       - "7000:5000"
     depends_on:

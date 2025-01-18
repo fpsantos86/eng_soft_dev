@@ -49,7 +49,7 @@ jobs:
 
   build:
     runs-on: ubuntu-latest
-    needs: [test, frontend_build]
+    needs: [test]
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
@@ -60,10 +60,7 @@ jobs:
         username: ${{ secrets.DOCKER_USERNAME }}
         password: ${{ secrets.DOCKER_PASSWORD }}
 
-    - name: Install Docker Compose
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y docker-compose
+
 
     - name: Build Docker Images
       run: |
@@ -76,6 +73,11 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
+
+    - name: Install Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
 
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
@@ -93,6 +95,11 @@ jobs:
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
+
+    - name: Install Docker Compose
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y docker-compose
 
     - name: Log in to Docker Hub
       uses: docker/login-action@v2

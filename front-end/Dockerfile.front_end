@@ -5,25 +5,19 @@ FROM node:20.17.0 AS build
 WORKDIR /app
 
 # Copie o package.json e o package-lock.json
-COPY package.json yarn.lock /app/
+COPY package*.json yarn.lock ./
 
 # Instale as dependências
-RUN npm ci
+RUN yarn install
 
 # Copie o restante do código da aplicação
-COPY . /app
+COPY . .
 
 # Construa a aplicação
 RUN yarn build
 
-# Etapa de produção para um servidor leve
-FROM nginx:1.23.3
-
-# Copie os arquivos construídos para o Nginx
-COPY --from=build /app/build /usr/share/nginx/html
-
-# Exponha a porta padrão do Nginx
+# Exponha a porta que a aplicação irá rodar
 EXPOSE 3001
 
-# Comando para iniciar o Nginx
-CMD ["nginx", "-g", "daemon off;"]
+# Comando para iniciar a aplicação
+CMD ["yarn", "start"]

@@ -28,32 +28,13 @@ jobs:
     - name: Run Backend Tests
       run: |
         pytest ./produtos_service/tests
+
   build:
     runs-on: ubuntu-latest
     needs: test
     steps:
     - name: Checkout Code
       uses: actions/checkout@v3
-
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20.17.0' # Alinhado com sua máquina local
-        cache: 'npm'
-
-    - name: Update npm to Specific Version
-      run: npm install -g npm@11.0.0 # Atualiza o npm para a mesma versão da sua máquina local
-      
-    - name: Install Frontend Dependencies
-      run: |
-        cd ./front-end
-        npm install --legacy-peer-deps
-
-
-    - name: Build Frontend Application
-      run: |
-        cd ./front-end
-        npm run build
 
     - name: Log in to Docker Hub
       uses: docker/login-action@v2

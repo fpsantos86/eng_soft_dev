@@ -1,23 +1,29 @@
-# Use a imagem base do Node.js
-FROM node:14
-
-# Defina o diretório de trabalho
+# Etapa 1: Build
+FROM node:16 AS build
 WORKDIR /app
 
-# Copie o package.json e o package-lock.json
-COPY package*.json ./
-
-# Instale as dependências
+# Copie os arquivos necessários
+COPY package.json package-lock.json ./
 RUN npm install
 
-# Copie o restante do código da aplicação
+# Copie o restante dos arquivos do projeto
 COPY . .
 
-# Construa a aplicação
+# Execute o build do React
 RUN npm run build
 
-# Exponha a porta que a aplicação irá rodar
+# Etapa 2: Produção
+FROM nginx:stable-alpine
+WORKDIR /usr/share/nginx/html
+
+# Remova o conteúdo padrão do nginx
+RUN rm -rf ./*
+
+# Copie os arquivos de build do React
+COPY --from=build /app/build .
+
+# Exponha a porta 80
 EXPOSE 3001
 
-# Comando para iniciar a aplicação
-CMD ["npm", "start"]
+# Inicie o servidor NGINX
+CMD ["nginx", "-g", "daemon off;"]

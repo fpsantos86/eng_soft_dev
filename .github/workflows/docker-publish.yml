@@ -51,7 +51,9 @@ jobs:
     - name: Build Frontend Application
       run: |
         cd front-end
-        npm run build
+        npm install -g yarn
+        yarn build
+        # npm run build
 
   build:
     runs-on: ubuntu-latest

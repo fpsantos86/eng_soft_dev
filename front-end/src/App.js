@@ -1,16 +1,10 @@
 import { Admin, Resource, List, Datagrid, TextField, EditButton, DeleteButton, Create, Edit, SimpleForm, TextInput, NumberInput } from 'react-admin';
-import polyglotI18nProvider from 'ra-i18n-polyglot';
 import fixedDataProvider from './fixedDataProvider';
 import React from 'react';
 
-
-
-// Provedor de i18n
-// const i18nProvider = polyglotI18nProvider('pt-br');
-
 export default function App() {
   return (
-    // <Admin dataProvider={fixedDataProvider} i18nProvider={i18nProvider}>
+
     <Admin dataProvider={fixedDataProvider}>
       <Resource
         name='produtos'

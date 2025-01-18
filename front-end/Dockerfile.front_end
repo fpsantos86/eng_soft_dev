@@ -1,30 +1,23 @@
-# Etapa 1: Build
-FROM node:16 AS build
+# Use a imagem base do Node.js
+FROM node:20
+
+# Defina o diretório de trabalho
 WORKDIR /app
 
-# Copie os arquivos necessários
-COPY package.json package-lock.json ./
+# Copie o package.json e o package-lock.json
+COPY package*.json ./
+
+# Instale as dependências
 RUN npm install --legacy-peer-deps
 
-
-# Copie o restante dos arquivos do projeto
+# Copie o restante do código da aplicação
 COPY . .
 
-# Execute o build do React
+# Construa a aplicação
 RUN npm run build
 
-# Etapa 2: Produção
-FROM nginx:stable-alpine
-WORKDIR /usr/share/nginx/html
-
-# Remova o conteúdo padrão do nginx
-RUN rm -rf ./*
-
-# Copie os arquivos de build do React
-COPY --from=build /app/build .
-
-# Exponha a porta 80
+# Exponha a porta que a aplicação irá rodar
 EXPOSE 3001
 
-# Inicie o servidor NGINX
-CMD ["nginx", "-g", "daemon off;"]
+# Comando para iniciar a aplicação
+CMD ["npm", "start"]

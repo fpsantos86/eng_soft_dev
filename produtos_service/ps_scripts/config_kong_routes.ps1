@@ -41,7 +41,6 @@ $routes = @(
     @{ methods = @("DELETE"); paths = @("/{id_produto}") },
     @{ methods = @("POST");   paths = @("/") },
     @{ methods = @("GET");    paths = @("/") }
-)
 
 foreach ($route in $routes) {
     Write-Host "Verificando se a rota já existe para: $($route.methods[0]) $($route.paths[0])"

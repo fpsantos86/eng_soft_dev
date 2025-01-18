@@ -32,7 +32,7 @@ const fixedDataProvider = {
         return customDataProvider.getManyReference(`${resource}`, params);
     },
     update: (resource, params) => {
-        return customDataProvider.update(`${resource}/`, params);
+        return customDataProvider.update(`${resource}`, params);
     },
     updateMany: (resource, params) => {
         return customDataProvider.updateMany(`${resource}/`, params);

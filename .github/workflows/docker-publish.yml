@@ -36,25 +36,6 @@ jobs:
     - name: Checkout Code
       uses: actions/checkout@v3
 
-    - name: Set up Node.js
-      uses: actions/setup-node@v3
-      with:
-        node-version: '20.17.0' # Versão do Node.js usada localmente
-        cache: 'npm' # Habilita cache para melhorar performance
-
-    - name: Update npm
-      run: npm install -g npm@11.0.0 # Atualiza o npm para a versão utilizada localmente
-
-    - name: Install Dependencies
-      run: |
-        cd ./front-end
-        npm install
-
-    - name: Build Frontend
-      run: |
-        cd ./front-end
-        npm run build
-
     - name: Log in to Docker Hub
       uses: docker/login-action@v2
       with:

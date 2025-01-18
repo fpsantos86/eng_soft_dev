@@ -41,19 +41,11 @@ jobs:
       with:
         node-version: '20.17.0'
 
-    - name: Install Frontend Dependencies
+    - name: Install Frontend Dependencies & Build
       run: |
         cd front-end
         yarn install
-        # npm install -g npm-force-resolutions
-        # npm run fix-deps
-
-    - name: Build Frontend Application
-      run: |
-        cd front-end
-        npm install -g yarn
         yarn build
-        # npm run build
 
   build:
     runs-on: ubuntu-latest

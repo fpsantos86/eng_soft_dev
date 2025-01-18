@@ -43,6 +43,14 @@ jobs:
       with:
         python-version: '3.9'
 
+    - name: Install Backend Dependencies
+      run: |
+        pip install -r ./produtos_service/requirements.txt
+
+    - name: Install pytest
+      run: |
+        pip install pytest
+
     - name: Run Backend Tests
       run: |
         pytest ./produtos_service/tests
@@ -51,6 +59,7 @@ jobs:
       run: |
         cd ./front-end
         npm test
+
 
   push:
     runs-on: ubuntu-latest

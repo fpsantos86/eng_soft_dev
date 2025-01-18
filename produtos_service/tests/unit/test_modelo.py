@@ -1,36 +1,35 @@
 import pytest
-from domain.modelo import Pedido, ItemPedido
+from domain.modelo import Produto
 
-def test_criar_pedido():
-    itens = [ItemPedido(id="prod1", quantidade=2, preco=50.0)]
-    pedido = Pedido(id_pedido="pedido1", id_cliente="cliente1", itens=itens)
-    assert pedido.id_pedido == "pedido1"
-    assert pedido.id_cliente == "cliente1"
-    assert pedido.status == "Pendente"
-    assert len(pedido.itens) == 1
-    assert pedido.calcular_total() == 100.0  # Verifica o cálculo do total do pedido
+def test_criar_produto():
+    produto = Produto(nome="Produto 1", descricao="Descrição do Produto 1", preco=50.0, quantidade_estoque=100, id="prod1")
+    assert produto.id == "prod1"
+    assert produto.nome == "Produto 1"
+    assert produto.descricao == "Descrição do Produto 1"
+    assert produto.preco == 50.0
+    assert produto.quantidade_estoque == 100
 
-def test_atualizar_status():
-    pedido = Pedido(id_pedido="pedido1", id_cliente="cliente1", itens=[])
-    status_anterior, status_novo = pedido.atualizar_status("Concluído")
-    assert status_anterior == "Pendente"
-    assert status_novo == "Concluído"
-    assert pedido.status == "Concluído"
+def test_atualizar_preco():
+    produto = Produto(nome="Produto 1", descricao="Descrição do Produto 1", preco=50.0, quantidade_estoque=100, id="prod1")
+    preco_antigo, preco_novo = produto.atualizar_preco(75.0)
+    assert preco_antigo == 50.0
+    assert preco_novo == 75.0
+    assert produto.preco == 75.0
 
-def test_cancelar_pedido():
-    pedido = Pedido(id_pedido="pedido1", id_cliente="cliente1", itens=[])
-    pedido.cancelar()
-    assert pedido.status == "Cancelado"
+def test_reduzir_estoque():
+    produto = Produto(nome="Produto 1", descricao="Descrição do Produto 1", preco=50.0, quantidade_estoque=100, id="prod1")
+    produto.reduzir_estoque(20)
+    assert produto.quantidade_estoque == 80
 
-def test_cancelar_pedido_concluido():
-    pedido = Pedido(id_pedido="pedido1", id_cliente="cliente1", itens=[], status="Concluído")
-    with pytest.raises(ValueError, match="Não é possível cancelar um pedido já concluído."):
-        pedido.cancelar()
+def test_reduzir_estoque_insuficiente():
+    produto = Produto(nome="Produto 1", descricao="Descrição do Produto 1", preco=50.0, quantidade_estoque=10, id="prod1")
+    with pytest.raises(ValueError, match="Quantidade em estoque insuficiente."):
+        produto.reduzir_estoque(20)
 
-def test_calcular_total_pedido():
-    itens = [
-        ItemPedido(id="prod1", quantidade=2, preco=50.0),
-        ItemPedido(id="prod2", quantidade=1, preco=100.0),
-    ]
-    pedido = Pedido(id_pedido="pedido1", id_cliente="cliente1", itens=itens)
-    assert pedido.calcular_total() == 200.0  # Verifica o total correto
+def test_atualizar_detalhes():
+    produto = Produto(nome="Produto 1", descricao="Descrição do Produto 1", preco=50.0, quantidade_estoque=100, id="prod1")
+    produto.atualizar_detalhes(nome="Produto 1 Atualizado", descricao="Nova Descrição", preco=60.0, quantidade_estoque=150)
+    assert produto.nome == "Produto 1 Atualizado"
+    assert produto.descricao == "Nova Descrição"
+    assert produto.preco == 60.0
+    assert produto.quantidade_estoque == 150

@@ -1,34 +1,24 @@
 from unittest.mock import Mock
-from domain.consultas import ConsultarDetalhesPedido, ListarPedidosCliente
-from camada_servico.manipuladores_consulta import manipular_consultar_detalhes_pedido, manipular_listar_pedidos_cliente
+from domain.consultas import ConsultarDetalhesProduto
+from camada_servico.manipuladores_consulta import manipular_consultar_detalhes_produto
 
-def test_manipular_consultar_detalhes_pedido():
+def test_manipular_consultar_detalhes_produto():
     repositorio = Mock()
-    repositorio.obter.return_value = Mock(
-        id_pedido="pedido1", id_cliente="cliente1", status="Pendente", itens=[Mock(id="prod1", quantidade=2)]
-    )
-    consulta = ConsultarDetalhesPedido(id_pedido="pedido1")
+    repositorio.obter_por_id.return_value = {
+        "id": "prod1",
+        "nome": "Produto 1",
+        "descricao": "Descrição do Produto 1",
+        "preco": 50.0,
+        "quantidade_estoque": 100
+    }
+    consulta = ConsultarDetalhesProduto(id="prod1")
 
-    resultado = manipular_consultar_detalhes_pedido(consulta, repositorio)
+    resultado = manipular_consultar_detalhes_produto(consulta, repositorio)
 
     assert resultado == {
-        "id_pedido": "pedido1",
-        "id_cliente": "cliente1",
-        "status": "Pendente",
-        "itens": [{"id": "prod1", "quantidade": 2}],
+        "id": "prod1",
+        "nome": "Produto 1",
+        "descricao": "Descrição do Produto 1",
+        "preco": 50.0,
+        "quantidade_estoque": 100
     }
-
-def test_manipular_listar_pedidos_cliente():
-    repositorio = Mock()
-    repositorio.listar_por_cliente.return_value = [
-        Mock(id_pedido="pedido1", status="Pendente", itens=[Mock()]),
-        Mock(id_pedido="pedido2", status="Concluído", itens=[Mock(), Mock()]),
-    ]
-    consulta = ListarPedidosCliente(id_cliente="cliente1")
-
-    resultado = manipular_listar_pedidos_cliente(consulta, repositorio)
-
-    assert resultado == [
-        {"id_pedido": "pedido1", "status": "Pendente", "quantidade_itens": 1},
-        {"id_pedido": "pedido2", "status": "Concluído", "quantidade_itens": 2},
-    ]

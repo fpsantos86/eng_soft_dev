@@ -1,3 +1,4 @@
+from camada_servico.notificador_teams import NotificadorTeams
 from flask import Flask, json, make_response, request, jsonify, send_from_directory
 from flask_cors import CORS
 from flask_restx import Api, Resource, fields
@@ -83,6 +84,9 @@ produto_model_atualizacao = api.model("Produto", {
     )
 })
 
+WEBHOOK_URL = "https://fiapcom.webhook.office.com/webhookb2/62c739a1-e669-4fb7-aa95-b994ed843e16@11dbbfe2-89b8-4549-be10-cec364e59551/IncomingWebhook/d655a315f1b54d758d28c5e30c1b84b1/f5db9e54-1a82-4b45-a6a6-1e5c29ccd23a/V2pxNBVdSm-GPK89NhSO1yz6-BzLF9HoQbYQ2IDgJ9bhU1"
+# Instância do TeamsNotifier
+notificador = NotificadorTeams(WEBHOOK_URL)
 
 @ns_produtos.route("/<string:id>", strict_slashes=False)
 class ProdutoResource(Resource):
@@ -110,11 +114,17 @@ class ProdutoResource(Resource):
             preco=dados["preco"],
             quantidade_estoque=dados["quantidade_estoque"]
         )
+        
         repositorio = RepositorioProduto()
         barramento = BarramentoMensagens()
         barramento.configurar_exchange("produtos_eventos", "direct")
         barramento.configurar_fila("produtos_eventos", "atualizacao_produto", "produto.atualizacao")
         produto = manipular_atualizar_produto(comando, repositorio, barramento)
+        
+        notificador.enviar_mensagem(title="Produto Editado",
+                                    text=f"O produto com ID {id} foi atualizado para '{dados}'.",
+                                    theme_color="FFFF00")
+        
         return make_response(produto.to_dict(), 200)
     
     @ns_produtos.doc("remover_produto")
@@ -132,6 +142,11 @@ class ProdutoResource(Resource):
         barramento.configurar_fila("produtos_eventos", "exclusao_produto", "produto.exclusao")
         repositorio = RepositorioProduto()
         manipular_excluir_produto(comando, repositorio, barramento)
+        
+        notificador.enviar_mensagem( title="Produto Deletado",
+                                        text=f"O produto com ID {id} foi deletado do sistema.",
+                                        theme_color="FF0000")
+        
         return {"message": "Produto removido com sucesso"}, 200
 
 @ns_produtos.route("/", strict_slashes=False)
@@ -151,6 +166,11 @@ class ProdutoListaResource(Resource):
         barramento.configurar_exchange("produtos_eventos", "direct")
         barramento.configurar_fila("produtos_eventos", "inclusao_produto", "produto.criacao")
         produto = manipular_adicionar_produto(comando, repositorio, barramento)
+        
+        notificador.enviar_mensagem(title="Produto Incluído",
+                                    text=f"O produto '{dados}' foi incluído no sistema.",
+                                    theme_color="00FF00")
+    
         return make_response(produto.to_dict(), 201)
 
     @ns_produtos.doc("listar_produtos")
@@ -184,6 +204,7 @@ class ProdutoListaResource(Resource):
             }
             for produto in produtos_paginados
         ]
+        
 
         return make_response(jsonify({"data": produtos_formatados, "total": len(produtos)}), 200)
 

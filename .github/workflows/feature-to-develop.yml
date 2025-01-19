@@ -1,0 +1,30 @@
+name: Feature to Develop Workflow
+
+on:
+  push:
+    branches:
+      - feature/*
+
+jobs:
+  validate-and-create-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Exemplo: Validação com lint (remova ou ajuste se não estiver usando flake8)
+      - name: Code Quality Check
+        run: |
+          echo "Running lint checks"
+          flake8 ./src || echo "Lint warnings/errors (ajuste conforme necessário)"
+
+      - name: Create Pull Request to Develop
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: ${{ github.ref_name }}
+          base: develop
+          title: "Feature: Merge ${{ github.ref_name }} to develop"
+          body: |
+            This pull request was automatically created for the branch `${{ github.ref_name }}`.
+            Please review and merge into `develop`.

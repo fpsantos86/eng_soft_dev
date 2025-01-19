@@ -1,0 +1,25 @@
+name: Main Validation Workflow
+
+on:
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  validate-main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Exemplo: Build do projeto
+      - name: Build Project
+        run: |
+          echo "Building project"
+          docker-compose build
+
+      # Exemplo: Deploy em ambiente local (opcional)
+      - name: Deploy to Local Environment (Optional)
+        run: |
+          echo "Deploying to local environment"
+          docker-compose up -d

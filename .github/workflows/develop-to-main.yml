@@ -1,0 +1,24 @@
+name: Develop to Main Workflow
+
+on:
+  push:
+    branches:
+      - develop
+
+jobs:
+  create-pr-to-main:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Create Pull Request to Main
+        uses: peter-evans/create-pull-request@v5
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          branch: develop
+          base: main
+          title: "Release: Merge develop into main"
+          body: |
+            This pull request was automatically created to merge changes from `develop` into `main`.
+            Please review and approve for release.

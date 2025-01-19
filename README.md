@@ -12,11 +12,66 @@ Antes de começar, você precisará ter instalado em sua máquina:
 - [Docker Compose](https://docs.docker.com/compose/install/)
 
 ---
+### Teste na usa máquina:
 
-## **Como Clonar e Rodar o Projeto**
+ - Crie uma diretório chamado "app_produtos"
+   - Dentro dele crie um arquivo docker-compose.yml
+ - Cole o código abaixo:
+```yml
+services:
+  app:
+    image: fpsantos86/backend_produtos:latest
+    container_name: app_flask
+    environment:
+      POSTGRES_HOST: postgres
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin
+      POSTGRES_DB: produtos_db
+      MONGO_HOST: mongodb
+      MONGO_PORT: 27017
+      MONGO_USER: admin
+      MONGO_PASSWORD: admin123
+      MONGO_DB_NAME: produtos_db
+      MONGO_COLLECTION_NAME: produtos
+      RABBITMQ_HOST: rabbitmq
+      RABBITMQ_PORT: 5672
+      RABBITMQ_USER: guest
+      RABBITMQ_PASSWORD: guest
+      IS_DOCKER: "true"
+    ports:
+      - "7000:5000"
+    depends_on:
+      - postgres
+      - mongodb
+      - rabbitmq
+    networks:
+      - eng-soft-dev
 
-### 1. Clone o Repositório
+  front-end:
+    image: fpsantos86/front-end_produtos:latest
+    container_name: front_end
+    depends_on:
+      - app
+    ports:
+      - "3001:3000"
+    networks:
+      - eng-soft-dev
 
+
+```
+
+Em seguida, abra o terminal e digite :
 ```bash
-git clone https://github.com/seu-usuario/seu-repositorio.git
-cd seu-repositorio
+~$ docker-compose up -d
+```
+
+---
+## Contato
+Para dúvidas ou sugestões, entre em contato:
+
+ - Autor: Felipe Pereira
+ - Email: fpsantos86@hotmail.com
+ - GitHub: https://github.com/fpsantos86
+
+

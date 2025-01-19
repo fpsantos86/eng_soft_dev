@@ -1,10 +1,12 @@
-name: Gitflow with Pull Requests
+name: Gitflow with Pull Requests to Develop
 
 on:
+  # Evento para pull requests direcionadas à develop
   pull_request:
     branches:
       - develop
 
+  # Evento para branches feature/*
   push:
     branches:
       - feature/*
@@ -20,17 +22,18 @@ jobs:
       - name: Run Unit Tests
         run: |
           echo "Running unit tests for feature branch"
-          # Comando de teste aqui
+          # Substituir com o comando real de testes
           pytest ./tests
 
-      - name: Lint and Code Quality Check
+      - name: Code Quality Check
         run: |
-          echo "Running lint and quality checks"
-          # Exemplo de lint
+          echo "Running lint checks"
+          # Substituir com o comando real de lint
           flake8 ./src
 
-  ci-pr:
-    if: github.event_name == 'pull_request'
+  ci-pr-develop:
+    # Evento específico para PRs abertas contra a branch develop
+    if: github.event_name == 'pull_request' && github.base_ref == 'develop'
     runs-on: ubuntu-latest
     steps:
       - name: Checkout Code
@@ -38,8 +41,7 @@ jobs:
 
       - name: Run Integration Tests
         run: |
-          echo "Running integration tests for pull request"
-          # Comando de teste de integração aqui
+          echo "Running integration tests for pull request to develop"
           pytest ./integration_tests
 
       - name: Build Docker Images

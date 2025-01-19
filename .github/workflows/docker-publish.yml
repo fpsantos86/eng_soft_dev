@@ -1,60 +1,54 @@
-name: Docker Publish
+name: Gitflow with Pull Requests
 
 on:
   pull_request:
-    types:
-      - closed
+    branches:
+      - develop
+
+  push:
+    branches:
+      - feature/*
 
 jobs:
-  test:
-    if: github.event.pull_request.merged == true
+  ci-feature:
+    if: startsWith(github.ref, 'refs/heads/feature/')
     runs-on: ubuntu-latest
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Set up Python
-      uses: actions/setup-python@v2
-      with:
-        python-version: '3.x'
+      - name: Run Unit Tests
+        run: |
+          echo "Running unit tests for feature branch"
+          # Comando de teste aqui
+          pytest ./tests
 
-    - name: Install Dependencies
-      run: |
-        pip install -r ./produtos_service/requirements.txt
+      - name: Lint and Code Quality Check
+        run: |
+          echo "Running lint and quality checks"
+          # Exemplo de lint
+          flake8 ./src
 
-    - name: Install pytest
-      run: |
-        pip install pytest
-
-    - name: Run Backend Tests
-      run: |
-        pytest ./produtos_service/tests
-
-  docker_build_and_push:
-    if: github.event.pull_request.merged == true
+  ci-pr:
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    needs: [test]
     steps:
-    - name: Checkout Code
-      uses: actions/checkout@v3
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-    - name: Log in to Docker Hub
-      uses: docker/login-action@v2
-      with:
-        username: ${{ secrets.DOCKER_USERNAME }}
-        password: ${{ secrets.DOCKER_PASSWORD }}
+      - name: Run Integration Tests
+        run: |
+          echo "Running integration tests for pull request"
+          # Comando de teste de integração aqui
+          pytest ./integration_tests
 
-    - name: Install Docker Compose
-      run: |
-          sudo apt-get update
-          sudo apt-get install -y docker-compose
+      - name: Build Docker Images
+        run: |
+          echo "Building Docker images"
+          docker-compose build
 
-    - name: Build Docker Images
-      run: |
-        export GITHUB_RUN_NUMBER=${{ github.run_number }}
-        echo "GITHUB_RUN_NUMBER=${{ github.run_number }}"  
-        docker-compose -f docker-compose.yaml build
-
-    - name: Push Docker Images
-      run: |
-        docker-compose -f docker-compose.yaml push
+      - name: Deploy to Staging
+        if: github.event.pull_request.merged == true
+        run: |
+          echo "Deploying to staging environment"
+          docker-compose up -d

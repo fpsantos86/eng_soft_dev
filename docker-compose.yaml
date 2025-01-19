@@ -63,7 +63,7 @@ services:
     build:
       context: ./produtos_service 
       dockerfile: Dockerfile.app
-    image: fpsantos86/backend_produtos:${GITHUB_RUN_NUMBER}
+    image: fpsantos86/backend_produtos:latest
     container_name: app_flask
     environment:
       POSTGRES_HOST: postgres
@@ -127,7 +127,7 @@ services:
     build:
       context: ./front-end
       dockerfile: Dockerfile.front_end
-    image: fpsantos86/front-end_produtos:${GITHUB_RUN_NUMBER}
+    image: fpsantos86/front-end_produtos:latest
     container_name: front_end
     depends_on:
       rabbitmq:
